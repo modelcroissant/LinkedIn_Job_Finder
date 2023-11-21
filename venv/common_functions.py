@@ -9,6 +9,8 @@ def show_options(question, options):
               [sg.Button('OK')]]
 
     window = sg.Window('Choose an option', layout)
+    window.finalize()
+    window.bring_to_front()
 
     while True:
         event, values = window.read()
@@ -26,6 +28,8 @@ def get_user_input(prompt):
               [sg.Button('OK')]]
 
     window = sg.Window('Enter Text', layout)
+    window.finalize()
+    window.bring_to_front()
 
     while True:
         event, values = window.read()
@@ -48,7 +52,7 @@ def start_new_browser(firefox_profile_path):
     # Create Firefox options and set the profile
     firefox_options = Options()
     firefox_options.profile = firefox_profile
-    #firefox_options.add_argument("--headless")
+    firefox_options.add_argument("--headless")
 
     # Initialize the Firefox WebDriver with the specified profile
     browser = webdriver.Firefox(options=firefox_options)

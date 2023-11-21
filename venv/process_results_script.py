@@ -19,7 +19,7 @@ def process_results(status_queue, firefox):
 
         apply_button = """document.querySelector('.jobs-apply-button').click();"""
         submit_button = """document.querySelector('.jobs-easy-apply-footer__info + div button:nth-last-child(1)').click();"""
-        status_queue.put({"Title": "Proccessing Results Process","Status":"Finished Succesfully","stats": {"total jobs processed" : 0,"total jobs started":0,"total jobs not available":0,"total jobs with external links" : 0}})
+        status_queue.put({"Title": "Proccessing Results Process","Status":"Running...","stats": {"total jobs processed" : 0,"total jobs started":0,"total jobs not available":0,"total jobs with external links" : 0}})
 
         for row in rows:
             job_id = row[0]

@@ -38,7 +38,7 @@ class AppGUI:
             [sg.Text('Total Jobs Skipped:'),sg.Text('', key="skipped_jobs")],
             [sg.Button('Start'),sg.Button('Exit')]
         ]
-        self.window = sg.Window('LinkedIn Job Helper', self.layout, finalize=True, size=(400, 400))
+        self.window = sg.Window('LinkedIn Job Helper', self.layout, finalize=True, size=(500, 400))
 
 
     @staticmethod

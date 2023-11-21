@@ -8,9 +8,6 @@ def master_script(args):
     start_flag, shutdown_event, collect_stats_queue, browser = args
 
     while start_flag.value:
-        # Create a multiprocessing Queue for live statistics
-        process_stats_queue = Manager().Queue()
-
         # Create processes for collecting, processing results, and running the dashboard
         collect_process = Process(target=collect_results, args=(collect_stats_queue, browser))
         process_process = Process(target=process_results, args=(collect_stats_queue, browser))

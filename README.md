@@ -54,6 +54,20 @@ Alternatively, you can run the app using the Python interpreter. Navigate to the
 ```bash
 python -m linkedin_job_helper.app_gui_class
 ```
+  ```bash
+  python -m venv venv
+  source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+   ```
+## Prerequisites
+
+Before you can run the LinkedIn Job Finder app, ensure that you have the following prerequisites
+
+- **Python:** The app is built using Python, so you need to have Python installed. You can download Python from [python.org](https://www.python.org/downloads/).
+
+- **Virtual Environment (Optional):** While not strictly required, it's recommended to use a virtual environment to isolate your project's dependencies. You can create a virtual environment using the following commands:
+- **LinkedIn Account** The app revolves around applying for jobs on LinkedIn, a logged in account is essential for this.
+- **Firefox browser** The app only compatible with Firefox
+- **Logged in LinkedIn account on any Firefox profile** The app uses Firefox and relies on logged in account to avoid storing any personal data, this function is enabled in the GUI by allowing you to select a profile from a list of available profiles, you can check what profile you are using here [https://support.mozilla.org](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
 
 ## Application Screenshots
 

@@ -1,0 +1,3 @@
+[console_scripts]
+linkedin_job_helper = linkedin_job_helper.app_gui_class:main
+

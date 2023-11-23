@@ -5,3 +5,4 @@ linkedin_jobs.db
 .vscode/launch.json
 .pyc
 dist/
+*.gz

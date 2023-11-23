@@ -15,7 +15,7 @@ pip install https://github.com/modelcroissant/LinkedIn_Job_Finder/releases/tag/a
 
 Download the latest alpha release of LinkedIn Job Finder:
 
-- **Release:** [Alpha Release](https://github.com/modelcroissant/LinkedIn_Job_Finder/releases/tag/alpha)
+- **Release:** [Alpha Release](https://github.com/modelcroissant/LinkedIn_Job_Finder/releases/tag/alpha_2)
 
 ### Installing
 

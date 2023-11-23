@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 import os
 from multiprocessing import Manager, Process
 from threading import Thread
-from common_functions import insert_app_parameters, get_app_parameters, new_db_connection,create_results_table,create_questions_table,create_app_parameters,get_total_jobs,get_total_jobs_applied
+from common_functions import insert_url,insert_app_parameters, get_app_parameters, new_db_connection,create_results_table,create_questions_table,create_app_parameters,get_total_jobs,get_total_jobs_applied,create_searches_table,get_user_input
 from master_script import master_script
 import queue
 
@@ -12,19 +12,27 @@ class AppGUI:
         self.shutdown_event = shutdown_event
         self.collect_stats_queue = collect_stats_queue
         self.conn = new_db_connection()
-        self.browser = get_app_parameters(self.conn, "firefox_selected_user_profile")[0]
+        self.browser = get_app_parameters(self.conn, "firefox_selected_user_profile")
 
-        # Create the results table if it doesn't exist
         create_results_table(self.conn)
         create_questions_table(self.conn)
         create_app_parameters(self.conn)
+        create_searches_table(self.conn)
+        insert_app_parameters(self.conn, [["collect_results_script", False , None]])
 
+        # TODO Make GUI more presentable with auto sizing the window
+        # and have some conditional logic for other windows like start/running/init/options
+        # add options for running all processes or individual
+        # add the ability to clean the db
+        # remove applied for jobs or completly wipe the db or wipe certain tables
+        # add flags for showing browser windows or not
 
         self.layout = [
             [sg.Text('Welcome to LinkedIn Job Helper',font=('Arial Bold', 16))],
             [sg.Text('', font=('Arial Bold', 1), justification='center', expand_x=True)],
             [sg.Text('Current Firefox profile being used:'),sg.Text(str(self.browser.split("\\")[-1]), key="firefox")],
             [sg.Button('Change Firefox Profile', key='configure_profile')],
+            [sg.Button('Add LinkedIn Search link', key='add_search_urls')],
             [sg.Text('', font=('Arial Bold', 1), justification='center', expand_x=True)],
             [sg.Text('Total jobs in the db'),sg.Text(str(get_total_jobs(self.conn)), key="get_total_jobs")],
             [sg.Text('Total jobs applied for:'),sg.Text(str(get_total_jobs_applied(self.conn)),key="get_total_jobs_applied")],
@@ -38,8 +46,7 @@ class AppGUI:
             [sg.Text('Total Jobs Skipped:'),sg.Text('', key="skipped_jobs")],
             [sg.Button('Start'),sg.Button('Exit')]
         ]
-        self.window = sg.Window('LinkedIn Job Helper', self.layout, finalize=True, size=(500, 400))
-
+        self.window = sg.Window('LinkedIn Job Helper', self.layout, finalize=True, size=(450, 450))
 
     @staticmethod
     def _get_available_profiles():
@@ -60,8 +67,8 @@ class AppGUI:
         default_profile = AppGUI._get_default_profile(available_profiles)
 
         if db_params:
-            self.browser = db_params[0]
-            default_profile = db_params[0]
+            self.browser = db_params
+            default_profile = db_params
 
         layout = [
             [sg.Text('Select your Firefox profile')],
@@ -86,10 +93,8 @@ class AppGUI:
                 self.window['firefox'].update(self.browser.split("\\")[-1])
                 insert_app_parameters(self.conn, [["firefox_selected_user_profile", os.path.join(os.path.expandvars(r'%AppData%\Mozilla\Firefox\Profiles'), user_input), default_profile]])
                 break
-
-    def configure_firefox_profile(self):
-        AppGUI.get_firefox_profile_path(self)
-
+    
+    @staticmethod
     def run_dashboard(self):
         while not self.shutdown_event.is_set():
             try:
@@ -136,7 +141,11 @@ class AppGUI:
                 break
 
             if event == 'configure_profile':
-                self.configure_firefox_profile()
+                self.get_firefox_profile_path(self)
+
+            if event == 'add_search_urls':
+                url = get_user_input("Add LinkedIn Search URL you would like to search")
+                insert_url(self.conn, url)
 
             elif event == 'Start':
                 if get_app_parameters(self.conn, "firefox_selected_user_profile"):
@@ -153,7 +162,7 @@ class AppGUI:
                 thread = Thread(target=master_script, args=((self.start_flag, self.shutdown_event, self.collect_stats_queue, self.browser),))
                 thread.daemon = True
                 thread.start()
-                self.run_dashboard()
+                self.run_dashboard(self)
 
         self.window['-PBAR-'].update(max=100)
         self.conn.close()

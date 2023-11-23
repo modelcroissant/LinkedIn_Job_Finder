@@ -2,11 +2,14 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 import PySimpleGUI as sg
 import sqlite3
+import re
+from datasketch import MinHash, MinHashLSH
+from fuzzywuzzy import fuzz
 
-def show_options(question, options):
+def show_options(question, options): 
     layout = [[sg.Text(question)],
-              [sg.Combo(options, size=(20, len(options)), key='-COMBO-', enable_events=True)],
-              [sg.Button('OK')]]
+            [sg.Combo(options, size=(20, len(options)), key='-COMBO-', enable_events=True)],
+            [sg.Button('OK')]]
 
     window = sg.Window('Choose an option', layout)
     window.finalize()
@@ -24,8 +27,8 @@ def show_options(question, options):
 
 def get_user_input(prompt):
     layout = [[sg.Text(prompt)],
-              [sg.InputText(key='-INPUT-', size=(40, 5))],
-              [sg.Button('OK')]]
+            [sg.InputText(key='-INPUT-', size=(40, 5))],
+            [sg.Button('OK')]]
 
     window = sg.Window('Enter Text', layout)
     window.finalize()
@@ -41,32 +44,26 @@ def get_user_input(prompt):
 
     return values['-INPUT-']
 
-# Browser spool up
+def normalise_question(question):
+    cleaned_question = re.sub(r'[^\w\s]', '', question.lower().strip('?'))
+    cleaned_question = re.sub(r'\s+', ' ', cleaned_question)
+    return cleaned_question
+
 def start_new_browser(firefox_profile_path):
-    # Specify the path to the Firefox profile directory
     firefox_profile_path = firefox_profile_path
-
-    # Create a Firefox profile
     firefox_profile = webdriver.FirefoxProfile(firefox_profile_path)
-
-    # Create Firefox options and set the profile
     firefox_options = Options()
     firefox_options.profile = firefox_profile
-    firefox_options.add_argument("--headless")
+    #firefox_options.add_argument("--headless")
 
-    # Initialize the Firefox WebDriver with the specified profile
     browser = webdriver.Firefox(options=firefox_options)
     return browser
 
-# Function to load the last saved URL from the file
-def load_url_from_file():
-    try:
-        with open("current_url.txt", "r") as file:
-            return file.read().strip()
-    except FileNotFoundError:
-        return None
-    
-# Create the results table if it doesn't exist.   
+def load_url_from_db(conn):
+    cursor = conn.cursor()
+    cursor.execute('SELECT url FROM searches')
+    return cursor.fetchall()
+      
 def create_results_table(conn):
     cursor = conn.cursor()
     cursor.execute('''
@@ -74,7 +71,8 @@ def create_results_table(conn):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             job_id INTEGER UNIQUE,
             applied INTEGER DEFAULT 0,
-            external_link INTEGER DEFAULT 0
+            external_link INTEGER DEFAULT 0,
+            needs_user_input INTEGER DEFAULT 0       
         )
     ''')
     conn.commit()
@@ -85,12 +83,12 @@ def create_questions_table(conn):
         CREATE TABLE IF NOT EXISTS questions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             question TEXT UNIQUE,
-            answer TEXT
+            answer TEXT,
+            input_type TEXT
         )
     ''')
     conn.commit()
 
-# Create new table to keep global parameters
 def create_app_parameters(conn):
     cursor = conn.cursor()
     cursor.execute('''
@@ -103,13 +101,21 @@ def create_app_parameters(conn):
     ''')
     conn.commit()
 
-# Create new database connection
+def create_searches_table(conn):
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS searches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT UNIQUE      
+        )
+    ''')
+    conn.commit()
+
 def new_db_connection():
     db_path = 'linkedin_jobs.db'
     conn = sqlite3.connect(db_path)
     return conn
 
-# Insert results into the database.
 def insert_results(conn, results):
     cursor = conn.cursor()
 
@@ -117,8 +123,7 @@ def insert_results(conn, results):
         try:
             cursor.execute('INSERT INTO results (job_id) VALUES (?)', (int(i),))
         except sqlite3.IntegrityError as e:
-            # Handle the integrity error as needed (print, log, etc.)
-            print(f"job already in the DB: IntegrityError: {e}")
+            pass
 
     conn.commit()
 
@@ -136,24 +141,11 @@ def insert_app_parameters(conn,params: list[list]):
 
 def get_app_parameters(conn, param: str):
     cursor = conn.cursor()
-    db_param = None
-    try:
-        cursor.execute('SELECT value, alternative FROM global_parameters WHERE param = ? LIMIT 1', (param,))
-        db_param = cursor.fetchone()
-    except Exception as e:
-        print(f"{e}")
+    cursor.execute('SELECT value, alternative FROM global_parameters WHERE param = ? LIMIT 1', (param,))
+    return cursor.fetchone()[0]
 
-    results = []
-
-    if db_param:
-        results = list(db_param)
-
-    return results
-
-# Insert results into the database.
 def get_total_jobs(conn):
-    cursor = conn.cursor()
-    
+    cursor = conn.cursor()   
     cursor.execute('SELECT COUNT(*) FROM results')
     return int(cursor.fetchone()[0])
 
@@ -161,3 +153,14 @@ def get_total_jobs_applied(conn):
     cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM results WHERE applied = 1')
     return int(cursor.fetchone()[0])
+
+def insert_url(conn, result):
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO searches (url) VALUES (?)', (result,))
+        conn.commit()
+    except sqlite3.IntegrityError as e:
+        pass
+
+# TODO create an small algo to handle fuzzymatching and hash table logic for incoming questions
+#def get_answer(question):

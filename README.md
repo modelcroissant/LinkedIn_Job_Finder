@@ -8,7 +8,7 @@ A bot that helps to serach and apply for jobs
 To install the LinkedIn Job Finder app directly from the GitHub release, use the following `pip` command:
 
 ```bash
-pip install https://github.com/modelcroissant/LinkedIn_Job_Finder/releases/tag/alpha
+pip install https://github.com/modelcroissant/LinkedIn_Job_Finder/releases/tag/alpha_2
 ```
 
 ### Downloading the Release

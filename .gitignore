@@ -6,3 +6,4 @@ linkedin_jobs.db
 .pyc
 dist/
 *.gz
+linkedin_job_finder.egg-info/

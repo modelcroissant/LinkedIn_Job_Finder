@@ -1,7 +1,0 @@
-README.md
-setup.py
-linkedin_job_finder.egg-info/PKG-INFO
-linkedin_job_finder.egg-info/SOURCES.txt
-linkedin_job_finder.egg-info/dependency_links.txt
-linkedin_job_finder.egg-info/entry_points.txt
-linkedin_job_finder.egg-info/top_level.txt
